@@ -2,365 +2,290 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Windy Kiosk – Katowice</title>
-  <meta name="theme-color" content="#0f1115" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Weather Kiosk</title>
   <style>
-    :root{
-      --bg:#0f1115;
-      --panel:#161a22cc;
-      --panel-strong:#161a22ee;
-      --text:#eef3ff;
-      --muted:#a7b2c7;
-      --accent:#4da3ff;
-      --danger:#ff5f6d;
-      --radius:18px;
-      --shadow:0 10px 30px rgba(0,0,0,.28);
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-right: env(safe-area-inset-right, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-left: env(safe-area-inset-left, 0px);
-    }
-
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
       margin: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      touch-action: manipulation;
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
     }
 
     #app {
-      position: relative;
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
-      background: #0b0d12;
-    }
-
-    /* Windy fills the whole screen */
-    #windy-frame {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: #0b0d12;
-    }
-
-    /* Top HUD */
-    .hud {
-      position: absolute;
-      left: calc(14px + var(--safe-left));
-      right: calc(14px + var(--safe-right));
-      top: calc(14px + var(--safe-top));
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      background: #111;
+    }
+
+    /* Top bar */
+    .topbar {
+      height: 60px;
+      flex-shrink: 0;
+      display: flex;
       justify-content: space-between;
-      gap: 14px;
-      pointer-events: none; /* so map still pans underneath except on controls */
-      z-index: 20;
-    }
-
-    .card {
-      pointer-events: auto;
-      background: var(--panel);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-
-    .brand {
-      display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      min-width: 0;
-    }
-
-    .dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 999px;
-      background: #2dd36f;
-      box-shadow: 0 0 18px rgba(45,211,111,.65);
-      flex: 0 0 auto;
-    }
-
-    .title-wrap { min-width: 0; }
-    .title {
+      padding: 0 16px;
+      background: #1b1b1b;
+      border-bottom: 1px solid #333;
       font-size: 18px;
-      font-weight: 700;
-      letter-spacing: .2px;
-      line-height: 1.1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      z-index: 5;
     }
-    .subtitle {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+
+    .title {
+      font-weight: bold;
     }
 
     .clock {
-      padding: 12px 16px;
-      text-align: right;
-      min-width: 180px;
-    }
-    .time {
-      font-size: 30px;
-      font-weight: 800;
-      letter-spacing: .6px;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-    .date {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
+      font-size: 24px;
+      font-weight: bold;
     }
 
-    /* Bottom controls */
-    .controls {
+    /* Main map area */
+    .map-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: #000;
+    }
+
+    #windy-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    /* Overlay buttons */
+    .overlay-buttons {
       position: absolute;
-      left: calc(14px + var(--safe-left));
-      right: calc(14px + var(--safe-right));
-      bottom: calc(14px + var(--safe-bottom));
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      z-index: 20;
-      pointer-events: none;
-    }
-
-    .toolbar {
+      top: 12px;
+      left: 12px;
+      z-index: 10;
       display: flex;
       gap: 8px;
-      padding: 10px;
-      pointer-events: auto;
       flex-wrap: wrap;
-      max-width: min(92vw, 920px);
     }
 
-    .btn {
-      appearance: none;
-      border: 0;
-      color: var(--text);
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      padding: 12px 14px;
+    .overlay-buttons button {
+      background: rgba(20,20,20,0.85);
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px 14px;
       font-size: 15px;
-      font-weight: 700;
       cursor: pointer;
-      min-height: 46px;
-      min-width: 88px;
-      transition: transform .08s ease, background .2s ease, border-color .2s ease;
-    }
-    .btn:active { transform: scale(.98); }
-    .btn.active {
-      background: rgba(77,163,255,.18);
-      border-color: rgba(77,163,255,.42);
-      color: #ffffff;
-      box-shadow: inset 0 0 0 1px rgba(77,163,255,.18);
     }
 
-    .meta {
-      padding: 12px 14px;
+    .overlay-buttons button.active {
+      background: #2d5cff;
+      border-color: #2d5cff;
+    }
+
+    /* Bottom forecast strip */
+    .forecast-strip {
+      height: 150px;
+      flex-shrink: 0;
+      background: #181818;
+      border-top: 1px solid #333;
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .day-card {
+      flex: 0 0 14.28%;
+      min-width: 120px;
+      border-right: 1px solid #2c2c2c;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 8px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .day-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .weather-icon {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    .temp {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .details {
       font-size: 13px;
-      color: var(--muted);
-      pointer-events: auto;
-      white-space: nowrap;
+      color: #bbb;
+      line-height: 1.4;
     }
 
-    /* Hide everything if user is idle for a cleaner kiosk */
-    .fadeable {
-      opacity: 1;
-      transition: opacity .35s ease;
-    }
-    body.idle .fadeable {
-      opacity: .18;
-    }
-
+    /* Better for narrow screens */
     @media (max-width: 900px) {
-      .hud { gap: 10px; }
-      .clock { min-width: 0; padding: 10px 12px; }
-      .time { font-size: 24px; }
-      .title { font-size: 16px; }
-      .subtitle, .date, .meta { font-size: 12px; }
-      .btn { min-width: 76px; padding: 10px 12px; font-size: 14px; }
+      .topbar {
+        height: 52px;
+        font-size: 16px;
+      }
+
+      .clock {
+        font-size: 20px;
+      }
+
+      .forecast-strip {
+        height: 130px;
+      }
+
+      .day-card {
+        min-width: 105px;
+      }
+
+      .temp {
+        font-size: 20px;
+      }
+
+      .details {
+        font-size: 12px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="app">
-    <iframe
-      id="windy-frame"
-      title="Windy map"
-      loading="eager"
-      referrerpolicy="strict-origin-when-cross-origin"
-      allow="fullscreen"
-      src="">
-    </iframe>
-
-    <div class="hud fadeable">
-      <div class="brand card">
-        <div class="dot" aria-hidden="true"></div>
-        <div class="title-wrap">
-          <div class="title" id="locationLabel">Katowice Weather Map</div>
-          <div class="subtitle">Fullscreen kiosk • touch to pan / pinch to zoom</div>
-        </div>
-      </div>
-
-      <div class="clock card" aria-live="polite">
-        <div class="time" id="timeNow">--:--</div>
-        <div class="date" id="dateNow">—</div>
-      </div>
+    <div class="topbar">
+      <div class="title">Katowice Weather</div>
+      <div class="clock" id="clock">--:--</div>
     </div>
 
-    <div class="controls fadeable">
-      <div class="toolbar card" id="toolbar" role="toolbar" aria-label="Weather layers">
-        <button class="btn active" data-overlay="wind">Wind</button>
-        <button class="btn" data-overlay="radar">Radar</button>
-        <button class="btn" data-overlay="temp">Temp</button>
-        <button class="btn" data-overlay="clouds">Clouds</button>
-        <button class="btn" data-overlay="rain">Rain</button>
+    <div class="map-wrap">
+      <div class="overlay-buttons">
+        <button class="active" data-overlay="wind">Wind</button>
+        <button data-overlay="radar">Radar</button>
+        <button data-overlay="temp">Temp</button>
+        <button data-overlay="clouds">Clouds</button>
       </div>
 
-      <div class="meta card" id="statusMeta">
-        Katowice • Surface • Zoom 7
-      </div>
+      <iframe id="windy-frame" src=""></iframe>
+    </div>
+
+    <div class="forecast-strip" id="forecast-strip">
+      <!-- Forecast cards inserted here -->
     </div>
   </div>
 
   <script>
-    // --- Configuration ---
-    const CONFIG = {
+    var CONFIG = {
       lat: 50.2649,
       lon: 19.0238,
       zoom: 7,
       level: "surface",
-      overlay: "wind",
-      locationLabel: "Katowice Weather Map",
-      metricWind: "default",
-      metricTemp: "default",
-      // Optional: set detail=true to show point forecast detail in embed when clicking
-      detail: false,
-      // Optional: if you prefer a marker pin:
-      marker: false,
-      // Reload every 6 hours as a safety net for long-running kiosk sessions
-      reloadMs: 1000 * 60 * 60 * 6,
-      // Fade HUD after inactivity
-      idleMs: 15000
+      overlay: "wind"
     };
 
-    const frame = document.getElementById("windy-frame");
-    const toolbar = document.getElementById("toolbar");
-    const timeNow = document.getElementById("timeNow");
-    const dateNow = document.getElementById("dateNow");
-    const locationLabel = document.getElementById("locationLabel");
-    const statusMeta = document.getElementById("statusMeta");
+    var frame = document.getElementById("windy-frame");
+    var buttons = document.querySelectorAll(".overlay-buttons button");
+    var forecastStrip = document.getElementById("forecast-strip");
 
-    locationLabel.textContent = CONFIG.locationLabel;
-
-    function windyUrl(overlay = CONFIG.overlay) {
-      const p = new URLSearchParams({
-        lat: String(CONFIG.lat),
-        lon: String(CONFIG.lon),
-        zoom: String(CONFIG.zoom),
-        level: CONFIG.level,
-        overlay,
-        menu: "",
-        message: "",
-        marker: CONFIG.marker ? "true" : "",
-        calendar: "",
-        pressure: "",
-        type: "map",
-        location: "coordinates",
-        detail: CONFIG.detail ? "true" : "",
-        metricWind: CONFIG.metricWind,
-        metricTemp: CONFIG.metricTemp
-      });
-      return `https://embed.windy.com/embed2.html?${p.toString()}`;
+    function buildWindyUrl(overlay) {
+      return "https://embed.windy.com/embed2.html" +
+        "?lat=" + CONFIG.lat +
+        "&lon=" + CONFIG.lon +
+        "&zoom=" + CONFIG.zoom +
+        "&level=" + CONFIG.level +
+        "&overlay=" + overlay +
+        "&menu=" +
+        "&message=" +
+        "&marker=" +
+        "&calendar=" +
+        "&pressure=" +
+        "&type=map" +
+        "&location=coordinates" +
+        "&detail=" +
+        "&metricWind=default" +
+        "&metricTemp=default";
     }
 
     function setOverlay(overlay) {
       CONFIG.overlay = overlay;
-      frame.src = windyUrl(overlay);
+      frame.src = buildWindyUrl(overlay);
 
-      // Update active button
-      [...toolbar.querySelectorAll(".btn")].forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.overlay === overlay);
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove("active");
+        if (buttons[i].getAttribute("data-overlay") === overlay) {
+          buttons[i].classList.add("active");
+        }
+      }
+    }
+
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener("click", function () {
+        setOverlay(this.getAttribute("data-overlay"));
       });
-
-      statusMeta.textContent = `Katowice • Surface • Zoom ${CONFIG.zoom} • ${overlayLabel(overlay)}`;
     }
 
-    function overlayLabel(key) {
-      const labels = {
-        wind: "Wind",
-        radar: "Radar",
-        temp: "Temperature",
-        clouds: "Clouds",
-        rain: "Rain"
-      };
-      return labels[key] || key;
-    }
-
-    toolbar.addEventListener("click", (e) => {
-      const btn = e.target.closest(".btn");
-      if (!btn) return;
-      setOverlay(btn.dataset.overlay);
-    });
-
-    // Clock
     function updateClock() {
-      const now = new Date();
-      timeNow.textContent = now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-      dateNow.textContent = now.toLocaleDateString([], {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
-    }
-    updateClock();
-    setInterval(updateClock, 1000 * 15);
+      var now = new Date();
+      var hours = now.getHours();
+      var minutes = now.getMinutes();
 
-    // Initial load
+      if (hours < 10) hours = "0" + hours;
+      if (minutes < 10) minutes = "0" + minutes;
+
+      document.getElementById("clock").textContent = hours + ":" + minutes;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
     setOverlay(CONFIG.overlay);
 
-    // Safety reload for kiosk reliability
-    setInterval(() => {
-      location.reload();
-    }, CONFIG.reloadMs);
+    // Placeholder forecast data (easy to replace later with real API)
+    var forecastData = [
+      { day: "Thu", icon: "🌤", temp: "12°C", wind: "14 km/h", rain: "0 mm" },
+      { day: "Fri", icon: "🌦", temp: "10°C", wind: "18 km/h", rain: "2 mm" },
+      { day: "Sat", icon: "🌧", temp: "9°C", wind: "20 km/h", rain: "5 mm" },
+      { day: "Sun", icon: "☁", temp: "11°C", wind: "12 km/h", rain: "0 mm" },
+      { day: "Mon", icon: "🌤", temp: "13°C", wind: "10 km/h", rain: "0 mm" },
+      { day: "Tue", icon: "☀", temp: "15°C", wind: "9 km/h", rain: "0 mm" },
+      { day: "Wed", icon: "🌦", temp: "14°C", wind: "16 km/h", rain: "1 mm" }
+    ];
 
-    // Idle fade
-    let idleTimer;
-    const bumpActivity = () => {
-      document.body.classList.remove("idle");
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => document.body.classList.add("idle"), CONFIG.idleMs);
-    };
-    ["touchstart","touchmove","mousedown","mousemove","keydown"].forEach(evt => {
-      window.addEventListener(evt, bumpActivity, { passive: true });
-    });
-    bumpActivity();
+    function renderForecast() {
+      var html = "";
+
+      for (var i = 0; i < forecastData.length; i++) {
+        var item = forecastData[i];
+        html +=
+          '<div class="day-card">' +
+            '<div class="day-name">' + item.day + '</div>' +
+            '<div class="weather-icon">' + item.icon + '</div>' +
+            '<div class="temp">' + item.temp + '</div>' +
+            '<div class="details">Wind: ' + item.wind + '<br>Rain: ' + item.rain + '</div>' +
+          '</div>';
+      }
+
+      forecastStrip.innerHTML = html;
+    }
+
+    renderForecast();
+
+    // Optional safety reload for long-running kiosk
+    setInterval(function () {
+      location.reload();
+    }, 1000 * 60 * 60 * 6); // every 6 hours
   </script>
 </body>
 </html>
